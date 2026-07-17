@@ -15,7 +15,8 @@ from .kapruka_mcp import KaprukaMCPClient, KaprukaMCPError
 from .models import AgentIntent, ChatResponse, ProductSearchRequest, UIBlock
 from .session_store import SessionStore
 
-
+#Agent response are define here.
+#Also the APIs that created in app.py are call here in different occasions that chat agent facing 
 class ShoppingAgent:
     def __init__(
         self,

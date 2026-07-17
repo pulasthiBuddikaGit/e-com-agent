@@ -17,7 +17,9 @@ from .models import ProductSummary
 class KaprukaMCPError(RuntimeError):
     pass
 
-
+#All the MCP functions are here 
+#Calling the MCP functions is done through this class. It handles caching, timeouts, and error handling for the MCP calls.
+#MCP Client calls MCP Server
 class KaprukaMCPClient:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -153,6 +155,9 @@ class KaprukaMCPClient:
             self._tool_arguments({"order_number": order_number}),
         )
 
+    #This function caches the results of tool calls for a specified time-to-live (TTL) in seconds. 
+    # It checks if the result is already cached and still valid; if so, it returns the cached result. 
+    # Otherwise, it calls the tool, caches the new result, and returns it.
     async def _cached_call(
         self,
         tool_name: str,

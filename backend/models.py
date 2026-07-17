@@ -9,6 +9,11 @@ from pydantic import BaseModel, Field, field_validator
 
 Currency = Literal["LKR", "USD", "AUD", "CAD", "EUR", "GBP"]
 
+#these models act as DTOs: request/response data transfer objects
+# Validation schemas: reject bad inputs before business logic runs
+# API contracts: FastAPI uses them to generate /docs
+# Internal state structures: cart, chat messages, session state
+# Serialization helpers: convert Python objects to JSON cleanly
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)

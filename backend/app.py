@@ -43,7 +43,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+#APIs are created here to talk to MCP Client functions
 def get_client_id(request: Request) -> str:
     forwarded_for = request.headers.get("x-forwarded-for")
     if forwarded_for:

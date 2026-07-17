@@ -65,4 +65,29 @@ Optional live MCP probe:
 
 ## Frontend
 
-The frontend has not been built yet. The next phase is to scaffold a Vite React app in `frontend/` and connect it to the backend endpoints above.
+The frontend is a Vite React app connected to the FastAPI backend.
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+By default it calls `http://127.0.0.1:8000`. To point it somewhere else:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Then edit `frontend\.env`:
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+Production build:
+
+```powershell
+cd frontend
+npm run build
+```
