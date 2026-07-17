@@ -578,7 +578,7 @@ function MessageBlock({
   }
 
   if (block.type === "delivery_check") {
-    return <DataBlock title="Delivery result" payload={block.data} />;
+    return <DeliverySummary payload={block.data} />;
   }
 
   if (block.type === "cart") {
@@ -910,7 +910,7 @@ function CheckoutPanel({
         </button>
       </div>
 
-      {deliveryResult && <DataBlock title="Delivery quote" payload={deliveryResult} />}
+      {deliveryResult && <DeliverySummary payload={deliveryResult} />}
 
       {prepareResult && (
         <div className={`checkout-status ${prepareResult.ready ? "ready" : "needs-work"}`}>
@@ -1091,6 +1091,71 @@ function ProductModal({
   );
 }
 
+function DeliverySummary({ payload }: { payload: unknown }) {
+  const delivery = unwrapDeliveryPayload(payload);
+  const available = pickAvailability(delivery);
+  const city = pickText(delivery, ["city", "delivery_city", "name"]);
+  const checkedDate = pickText(delivery, ["checked_date", "delivery_date", "date"]);
+  const nextDate = pickText(delivery, ["next_available_date", "next_date"]);
+  const rate = pickNumber(delivery, ["rate", "delivery_rate", "delivery_fee"]);
+  const currency = pickText(delivery, ["currency"]) ?? "LKR";
+  const reason = pickText(delivery, ["reason", "message", "status_display"]);
+  const warning = pickText(delivery, ["perishable_warning", "warning"]);
+
+  const statusClass =
+    available === true ? "available" : available === false ? "unavailable" : "unknown";
+  const statusText =
+    available === true
+      ? "Delivery available"
+      : available === false
+        ? "Delivery unavailable"
+        : "Delivery checked";
+
+  return (
+    <div className={`delivery-summary ${statusClass}`}>
+      <div className="delivery-summary-header">
+        <div className="delivery-icon">
+          {available === false ? <AlertCircle size={20} /> : <Truck size={20} />}
+        </div>
+        <div>
+          <strong>{statusText}</strong>
+          <p>{reason ?? "Kapruka returned a live delivery response for this request."}</p>
+        </div>
+      </div>
+
+      <div className="delivery-facts">
+        {city && (
+          <div>
+            <span>City</span>
+            <strong>{city}</strong>
+          </div>
+        )}
+        {checkedDate && (
+          <div>
+            <span>Date</span>
+            <strong>{checkedDate}</strong>
+          </div>
+        )}
+        {typeof rate === "number" && (
+          <div>
+            <span>Delivery fee</span>
+            <strong>{formatMoney(rate, currency)}</strong>
+          </div>
+        )}
+        {nextDate && (
+          <div>
+            <span>Next available</span>
+            <strong>{nextDate}</strong>
+          </div>
+        )}
+      </div>
+
+      {warning && <p className="delivery-warning">{warning}</p>}
+
+    </div>
+  );
+}
+
 function DataBlock({
   title,
   payload,
@@ -1106,6 +1171,48 @@ function DataBlock({
       <pre>{JSON.stringify(payload, null, 2)}</pre>
     </div>
   );
+}
+
+function unwrapDeliveryPayload(payload: unknown): Record<string, unknown> {
+  if (!isRecord(payload)) {
+    return {};
+  }
+  if (isRecord(payload.check)) {
+    return unwrapDeliveryPayload(payload.check);
+  }
+  if (isRecord(payload.result)) {
+    return unwrapDeliveryPayload(payload.result);
+  }
+  if (isRecord(payload.data)) {
+    return unwrapDeliveryPayload(payload.data);
+  }
+  return payload;
+}
+
+function pickAvailability(source: Record<string, unknown>) {
+  for (const key of [
+    "available",
+    "can_deliver",
+    "deliverable",
+    "delivery_available",
+    "is_available",
+    "serviceable"
+  ]) {
+    const value = source[key];
+    if (typeof value === "boolean") {
+      return value;
+    }
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["true", "yes", "available", "deliverable"].includes(normalized)) {
+        return true;
+      }
+      if (["false", "no", "unavailable", "not available", "not deliverable"].includes(normalized)) {
+        return false;
+      }
+    }
+  }
+  return null;
 }
 
 function readProducts(block: UIBlock): ProductSummary[] {
@@ -1242,4 +1349,3 @@ function formatMoney(value: number | null | undefined, currency: string) {
     return `${currency} ${value.toLocaleString("en-LK")}`;
   }
 }
-
